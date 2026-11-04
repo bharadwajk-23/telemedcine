@@ -4,7 +4,7 @@ from app.services.twilio_service import build_outbound_twiml, is_valid_e164, mas
 def test_build_outbound_twiml_includes_consent_and_dial():
     twiml = build_outbound_twiml("+15551234567")
 
-    assert "recorded and transcribed" in twiml
+    assert "recorded" in twiml
     assert "<Dial" in twiml
     assert "record=\"record-from-answer-dual\"" in twiml
     assert "<Number>+15551234567</Number>" in twiml

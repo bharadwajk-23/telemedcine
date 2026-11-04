@@ -61,24 +61,26 @@ function toggleMute() {
   log(muted ? "Muted" : "Unmuted");
 }
 
-async function refreshTranscript() {
+async function refreshRecordingStatus() {
   const res = await fetch(`/api/patients/${defaultPatientId}/calls`);
   const calls = await res.json();
-  const el = document.getElementById("transcript");
+  const el = document.getElementById("recordingStatus");
   if (calls.length === 0) {
     el.textContent = "(no calls yet)";
     return;
   }
   const latest = calls[calls.length - 1];
-  const tRes = await fetch(`/api/calls/${latest.id}/transcript`);
-  const { transcript } = await tRes.json();
-  el.textContent = `Status: ${transcript.status}\n\n${transcript.full_text || "(pending)"}`;
+  if (!latest.recording_sid) {
+    el.textContent = `Call status: ${latest.status}\nRecording: not ready yet`;
+    return;
+  }
+  el.textContent = `Call status: ${latest.status}\nRecording SID: ${latest.recording_sid}\nRecording URL: ${latest.recording_url}\n\n(download it with your Twilio Account SID/Auth Token for playback)`;
 }
 
 document.getElementById("callBtn").addEventListener("click", placeCall);
 document.getElementById("hangupBtn").addEventListener("click", hangup);
 document.getElementById("muteBtn").addEventListener("click", toggleMute);
-document.getElementById("refreshTranscriptBtn").addEventListener("click", refreshTranscript);
+document.getElementById("refreshStatusBtn").addEventListener("click", refreshRecordingStatus);
 
 loadDefaultPatient();
 setupDevice();

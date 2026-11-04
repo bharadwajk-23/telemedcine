@@ -14,8 +14,6 @@ class Settings:
     TWILIO_TWIML_APP_SID: str = os.getenv("TWILIO_TWIML_APP_SID", "")
     TWILIO_CALLER_ID: str = os.getenv("TWILIO_CALLER_ID", "")
 
-    DEEPGRAM_API_KEY: str = os.getenv("DEEPGRAM_API_KEY", "")
-
     BASE_URL: str = os.getenv("BASE_URL", "http://localhost:8000")
     DATA_FILE: str = os.getenv("DATA_FILE", "data/data.json")
 

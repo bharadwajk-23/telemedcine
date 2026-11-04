@@ -49,18 +49,11 @@ def test_voice_outbound_rejects_malformed_phone_number(client):
     assert response.status_code == 400
 
 
-def test_recording_webhook_triggers_transcription_once(client, monkeypatch):
+def test_recording_webhook_stores_recording_once(client):
     from app import storage
 
     storage.create_call(patient_id="patient-1", staff_id="staff-1")
     storage.set_twilio_call_sid(storage.list_calls_for_patient("patient-1")[0]["id"], "CA999")
-
-    called = {"count": 0}
-
-    def fake_transcribe_and_save(call_id, recording_url):
-        called["count"] += 1
-
-    monkeypatch.setattr("app.routers.webhooks._transcribe_and_save", fake_transcribe_and_save)
 
     payload = {
         "CallSid": "CA999",

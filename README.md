@@ -1,8 +1,8 @@
 # Telemedicine Click-to-Call (Quick Starter)
 
 A minimal working demo: a staff member calls a patient's real phone number from a
-browser softphone, the call is recorded in dual-channel, and the recording is
-transcribed with speaker labels (staff vs. patient).
+browser softphone, and the call is recorded in dual-channel (staff on one
+track, patient on the other). No transcription — just the recording.
 
 This is a **quick starter, not production-ready**: no authentication, a single
 hardcoded patient and staff user, and JSON-file storage (`data/data.json`)
@@ -15,19 +15,18 @@ patient data.
 app/
   main.py                      FastAPI app + static file serving
   config.py                    Settings from .env
-  storage.py                   JSON-file storage (patient, staff, calls, transcripts)
+  storage.py                   JSON-file storage (patient, staff, calls)
   routers/
     token.py                   GET /api/token
     voice.py                   POST /voice/outbound (Twilio webhook)
     webhooks.py                POST /webhooks/call-status, /webhooks/recording
-    calls.py                   GET /api/patients, /api/patients/{id}/calls, /api/calls/{id}/transcript
+    calls.py                   GET /api/patients, /api/patients/{id}/calls, /api/calls/{id}
   services/
-    twilio_service.py          Access tokens, TwiML, signature validation, recording download
-    transcription_service.py   Deepgram transcription with retries
+    twilio_service.py          Access tokens, TwiML, signature validation
   static/
     index.html, softphone.js   Demo page (Twilio Voice JS SDK)
 data/data.json                 Seeded with 1 patient + 1 staff user; calls appended here
-tests/                         pytest tests (TwiML + webhook handler, Twilio/Deepgram mocked)
+tests/                         pytest tests (TwiML + webhook handler, Twilio mocked)
 ```
 
 ## 1. Install
@@ -48,7 +47,6 @@ Fill in:
   Console > Account > API keys & tokens.
 - `TWILIO_CALLER_ID` — a Twilio phone number you own (shown as caller ID to the patient).
 - `TWILIO_TWIML_APP_SID` — see step 3.
-- `DEEPGRAM_API_KEY` — from the Deepgram console.
 - `BASE_URL` — your public ngrok URL (step 4), e.g. `https://abcd1234.ngrok-free.app`.
 
 ## 3. Create a Twilio TwiML App
@@ -87,14 +85,14 @@ need to be public, only the webhook endpoints Twilio calls do).
 3. The browser connects via WebRTC; Twilio hits `{BASE_URL}/voice/outbound`,
    which validates the number's format (E.164) and returns TwiML that plays a
    consent announcement, then dials it with dual-channel recording.
-4. Answer the call on the patient's phone (use your own phone number as the
-   seeded patient to test, or edit `data/data.json`).
-5. Hang up. Twilio posts the finished recording to
-   `/webhooks/recording`, which downloads the audio and kicks off a Deepgram
-   transcription in the background.
-6. Click **Refresh transcript** on the demo page (or
-   `GET /api/calls/{call_id}/transcript`) after a few seconds to see the
-   speaker-labelled transcript.
+4. Answer the call on the patient's phone (use your own phone number to test).
+5. Hang up. Twilio posts the finished recording to `/webhooks/recording`,
+   which just stores the recording's SID and URL against the call.
+6. Click **Refresh recording status** on the demo page (or
+   `GET /api/calls/{call_id}`) to see the recording SID/URL once it's ready.
+   The actual audio file lives in your Twilio account — fetch it from the
+   Twilio Console (Monitor > Logs > Calls, or the Recording URL + your
+   Account SID/Auth Token) if you want to play it back.
 
 ## Seed data / editing the patient
 
@@ -108,9 +106,9 @@ defaults on first run if missing.
 pytest
 ```
 
-Tests mock Twilio signature validation and Deepgram, and cover TwiML
-generation and the recording webhook's idempotency (duplicate
-`RecordingSid` callbacks are ignored).
+Tests mock Twilio signature validation and cover TwiML generation plus the
+recording webhook's idempotency (duplicate `RecordingSid` callbacks are
+ignored).
 
 ## Compliance notes (read before real use)
 
@@ -118,18 +116,18 @@ generation and the recording webhook's idempotency (duplicate
   For real use, also log a persistent consent record per call (not just the
   announcement).
 - **HIPAA (US)**: you need a signed Business Associate Agreement (BAA) with
-  both Twilio and Deepgram before processing real patient data.
+  Twilio before processing real patient data.
 - **DPDP Act (India)**: data residency and explicit consent requirements
-  apply to patient voice/transcript data.
-- **Encryption & access control**: recordings and transcripts should be
-  encrypted at rest and access-controlled. This starter stores everything in
-  a plain JSON file with no encryption — fine for a local demo, not for real
-  patient data.
+  apply to patient voice data.
+- **Encryption & access control**: recordings should be encrypted at rest and
+  access-controlled. This starter stores only metadata (SID/URL) in a plain
+  JSON file with no encryption — fine for a local demo, not for real patient
+  data. The actual audio stays in your Twilio account.
 - **Retention**: add a configurable retention period and a scheduled job that
-  deletes recordings/transcripts (and calls Twilio's API to delete the
-  recording) past that period. Not implemented in this starter.
+  calls Twilio's API to delete recordings past that period. Not implemented
+  in this starter.
 - **Phone numbers in logs**: `twilio_service.mask_phone()` masks all but the
-  last 2 digits; logs never include full phone numbers or transcript text.
+  last 2 digits; logs never include full phone numbers.
 - **Trusted dialer input**: the demo page lets staff type any phone number to
   call, and `/voice/outbound` only checks that it's well-formed E.164 (see
   `is_valid_e164` in `twilio_service.py`) — it does not verify the number
@@ -137,6 +135,14 @@ generation and the recording webhook's idempotency (duplicate
   trusted-staff demo; for real multi-patient use, go back to looking the
   number up server-side from a `patient_id` so a compromised or malicious
   browser can't dial arbitrary numbers through your Twilio account.
+
+## Adding transcription later
+
+If you want speech-to-text later, add a service that downloads the recording
+(`recording_url` + your Twilio Account SID/Auth Token for auth) in the
+`/webhooks/recording` handler and sends it to any STT provider (Deepgram,
+AssemblyAI, AWS Transcribe, OpenAI, etc. — see the pricing comparison doc
+from this project's chat history for options and costs).
 
 ## Swapping in a real database / auth later
 

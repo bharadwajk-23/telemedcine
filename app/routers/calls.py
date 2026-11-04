@@ -1,4 +1,4 @@
-"""Read endpoints for patients, calls and transcripts."""
+"""Read endpoints for patients and calls."""
 from fastapi import APIRouter, HTTPException
 
 from app import storage
@@ -17,9 +17,9 @@ def list_calls(patient_id: str):
     return storage.list_calls_for_patient(patient_id)
 
 
-@router.get("/api/calls/{call_id}/transcript")
-def get_transcript(call_id: str):
+@router.get("/api/calls/{call_id}")
+def get_call(call_id: str):
     call = storage.get_call(call_id)
     if not call:
         raise HTTPException(status_code=404, detail="Call not found")
-    return {"call_id": call_id, "transcript": call["transcript"]}
+    return call

@@ -69,13 +69,7 @@ def create_call(patient_id: str, staff_id: str) -> dict:
             "duration_seconds": None,
             "recording_sid": None,
             "recording_url": None,
-            "transcript": {
-                "status": "none",
-                "full_text": "",
-                "utterances": [],
-                "language": None,
-                "created_at": None,
-            },
+            "dialed_phone": None,
         }
         data["calls"].append(call)
         _write(data)
@@ -128,14 +122,3 @@ def update_call(call_id: str, **fields: Any) -> Optional[dict]:
 
 def set_twilio_call_sid(call_id: str, call_sid: str) -> None:
     update_call(call_id, twilio_call_sid=call_sid)
-
-
-def set_transcript(call_id: str, **fields: Any) -> Optional[dict]:
-    with _lock:
-        data = _read()
-        for call in data["calls"]:
-            if call["id"] == call_id:
-                call["transcript"].update(fields)
-                _write(data)
-                return call
-    return None

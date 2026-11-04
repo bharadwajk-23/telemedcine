@@ -8,7 +8,7 @@
     body { font-family: sans-serif; max-width: 640px; margin: 40px auto; }
     button { padding: 8px 16px; margin-right: 8px; }
     #log { white-space: pre-wrap; background: #f4f4f4; padding: 12px; margin-top: 16px; height: 200px; overflow-y: auto; }
-    #transcript { white-space: pre-wrap; background: #eef6ee; padding: 12px; margin-top: 16px; }
+    #recordingStatus { white-space: pre-wrap; background: #eef6ee; padding: 12px; margin-top: 16px; }
   </style>
 </head>
 <body>
@@ -25,9 +25,9 @@
 
   <div id="log"></div>
 
-  <h3>Transcript</h3>
-  <button id="refreshTranscriptBtn">Refresh transcript</button>
-  <div id="transcript">(no call yet)</div>
+  <h3>Recording</h3>
+  <button id="refreshStatusBtn">Refresh recording status</button>
+  <div id="recordingStatus">(no call yet)</div>
 
   <script src="/static/softphone.js"></script>
 </body>
