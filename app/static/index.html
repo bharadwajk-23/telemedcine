@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Telemedicine Click-to-Call Demo</title>
+  <script src="https://sdk.twilio.com/js/voice/releases/2.11.1/twilio.min.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 40px auto; }
+    button { padding: 8px 16px; margin-right: 8px; }
+    #log { white-space: pre-wrap; background: #f4f4f4; padding: 12px; margin-top: 16px; height: 200px; overflow-y: auto; }
+    #transcript { white-space: pre-wrap; background: #eef6ee; padding: 12px; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Click-to-Call Demo</h1>
+
+  <label for="phoneNumber">Phone number (E.164, e.g. +15551234567):</label>
+  <input type="tel" id="phoneNumber" placeholder="+15551234567" style="width: 220px;" />
+
+  <div style="margin-top: 16px;">
+    <button id="callBtn">Call</button>
+    <button id="hangupBtn" disabled>Hang up</button>
+    <button id="muteBtn" disabled>Mute</button>
+  </div>
+
+  <div id="log"></div>
+
+  <h3>Transcript</h3>
+  <button id="refreshTranscriptBtn">Refresh transcript</button>
+  <div id="transcript">(no call yet)</div>
+
+  <script src="/static/softphone.js"></script>
+</body>
+</html>
