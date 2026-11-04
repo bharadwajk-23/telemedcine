@@ -1,5 +1,6 @@
 """FastAPI app entrypoint."""
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -22,3 +23,10 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 @app.get("/")
 def index():
     return FileResponse("app/static/index.html")
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
