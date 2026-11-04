@@ -71,3 +71,28 @@ def test_recording_webhook_stores_recording_once(client):
     call = storage.get_call_by_recording_sid("RE111")
     assert call is not None
     assert call["recording_url"] == payload["RecordingUrl"]
+
+
+def test_get_recording_proxies_audio_bytes(client, monkeypatch):
+    from app import storage
+
+    call = storage.create_call(patient_id="patient-1", staff_id="staff-1")
+    storage.update_call(call["id"], recording_url="https://api.twilio.com/recordings/RE111")
+
+    async def fake_download_recording(recording_url):
+        return b"fake-mp3-bytes"
+
+    monkeypatch.setattr("app.routers.calls.download_recording", fake_download_recording)
+
+    response = client.get(f"/api/calls/{call['id']}/recording")
+    assert response.status_code == 200
+    assert response.content == b"fake-mp3-bytes"
+    assert response.headers["content-type"] == "audio/mpeg"
+
+
+def test_get_recording_404_when_not_ready(client):
+    from app import storage
+
+    call = storage.create_call(patient_id="patient-1", staff_id="staff-1")
+    response = client.get(f"/api/calls/{call['id']}/recording")
+    assert response.status_code == 404

@@ -88,11 +88,11 @@ need to be public, only the webhook endpoints Twilio calls do).
 4. Answer the call on the patient's phone (use your own phone number to test).
 5. Hang up. Twilio posts the finished recording to `/webhooks/recording`,
    which just stores the recording's SID and URL against the call.
-6. Click **Refresh recording status** on the demo page (or
-   `GET /api/calls/{call_id}`) to see the recording SID/URL once it's ready.
-   The actual audio file lives in your Twilio account — fetch it from the
-   Twilio Console (Monitor > Logs > Calls, or the Recording URL + your
-   Account SID/Auth Token) if you want to play it back.
+6. Click **Refresh recording status** on the demo page once the call ends.
+   An audio player appears and plays the recording directly in the page -
+   `GET /api/calls/{call_id}/recording` proxies the audio from Twilio
+   server-side (using your Account SID/Auth Token), so the browser never
+   needs Twilio credentials.
 
 ## Seed data / editing the patient
 

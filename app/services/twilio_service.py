@@ -1,8 +1,9 @@
-"""Thin wrapper around Twilio: access tokens, TwiML generation and signature
-validation."""
+"""Thin wrapper around Twilio: access tokens, TwiML generation, signature
+validation and recording download."""
 import logging
 import re
 
+import httpx
 from twilio.jwt.access_token import AccessToken
 from twilio.jwt.access_token.grants import VoiceGrant
 from twilio.request_validator import RequestValidator
@@ -70,3 +71,20 @@ def validate_twilio_signature(url: str, form_params: dict, signature: str) -> bo
     """Validate the X-Twilio-Signature header on an incoming webhook request."""
     validator = RequestValidator(settings.TWILIO_AUTH_TOKEN)
     return validator.validate(url, form_params, signature)
+
+
+async def download_recording(recording_url: str) -> bytes:
+    """Download a recording's audio from Twilio, authenticated with account credentials.
+
+    Lets the backend proxy playback to the browser so the Twilio Account SID /
+    Auth Token never has to be entered in the browser.
+    """
+    url = recording_url if recording_url.endswith(".mp3") else f"{recording_url}.mp3"
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            url,
+            auth=(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN),
+            timeout=30.0,
+        )
+        response.raise_for_status()
+        return response.content

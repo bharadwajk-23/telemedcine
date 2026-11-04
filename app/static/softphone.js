@@ -65,16 +65,24 @@ async function refreshRecordingStatus() {
   const res = await fetch(`/api/patients/${defaultPatientId}/calls`);
   const calls = await res.json();
   const el = document.getElementById("recordingStatus");
+  const player = document.getElementById("recordingPlayer");
+
   if (calls.length === 0) {
     el.textContent = "(no calls yet)";
+    player.style.display = "none";
     return;
   }
+
   const latest = calls[calls.length - 1];
   if (!latest.recording_sid) {
     el.textContent = `Call status: ${latest.status}\nRecording: not ready yet`;
+    player.style.display = "none";
     return;
   }
-  el.textContent = `Call status: ${latest.status}\nRecording SID: ${latest.recording_sid}\nRecording URL: ${latest.recording_url}\n\n(download it with your Twilio Account SID/Auth Token for playback)`;
+
+  el.textContent = `Call status: ${latest.status}\nRecording SID: ${latest.recording_sid}`;
+  player.src = `/api/calls/${latest.id}/recording`;
+  player.style.display = "block";
 }
 
 document.getElementById("callBtn").addEventListener("click", placeCall);
